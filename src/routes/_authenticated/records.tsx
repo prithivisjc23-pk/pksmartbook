@@ -24,7 +24,7 @@ function Records() {
   async function remove(id: string) {
     if (!confirm(t("delete") + "?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["txns"] });
     toast.success(t("deleted"));
   }

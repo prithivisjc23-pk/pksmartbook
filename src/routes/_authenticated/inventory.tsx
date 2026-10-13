@@ -37,18 +37,18 @@ function Inventory() {
     e.preventDefault();
     const row = { name: f.name, quantity: parseInt(f.quantity) || 0, low_stock_threshold: parseInt(f.low_stock_threshold) || 0, price: Number(f.price) || 0 };
     const { error } = editing ? await supabase.from("products").update(row).eq("id", editing.id) : await supabase.from("products").insert(row);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(t("saved")); setOpen(false); refresh();
   }
   async function bump(p: Product, d: number) {
     const { error } = await supabase.from("products").update({ quantity: Math.max(0, p.quantity + d) }).eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     refresh();
   }
   async function remove(p: Product) {
     if (!confirm(t("delete") + "?")) return;
     const { error } = await supabase.from("products").delete().eq("id", p.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(t("deleted")); refresh();
   }
 

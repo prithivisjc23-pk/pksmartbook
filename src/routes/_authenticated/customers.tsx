@@ -37,18 +37,18 @@ function Customers() {
     e.preventDefault();
     const row = { name: f.name, phone: f.phone || null, pending_amount: Number(f.pending_amount) || 0, notes: f.notes || null };
     const { error } = editing ? await supabase.from("customers").update(row).eq("id", editing.id) : await supabase.from("customers").insert(row);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(t("saved")); setOpen(false); refresh();
   }
   async function markPaid(c: Customer) {
     const { error } = await supabase.from("customers").update({ pending_amount: 0 }).eq("id", c.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     refresh();
   }
   async function remove(c: Customer) {
     if (!confirm(t("delete") + "?")) return;
     const { error } = await supabase.from("customers").delete().eq("id", c.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(t("deleted")); refresh();
   }
 
