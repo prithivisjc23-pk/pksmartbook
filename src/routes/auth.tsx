@@ -18,21 +18,29 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in or create your SolluBook AI shop account." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  }),
   component: AuthPage,
 });
+
+const allowed = ["/dashboard", "/records", "/customers", "/inventory", "/admin"] as const;
+type Dest = (typeof allowed)[number];
 
 function AuthPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { redirect: r } = Route.useSearch();
+  const dest: Dest = (allowed as readonly string[]).includes(r ?? "") ? (r as Dest) : "/dashboard";
   const [mode, setMode] = useState<"in" | "up">("in");
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({ email: "", password: "", full_name: "", shop_name: "" });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: "/dashboard" }));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => s && navigate({ to: "/dashboard" }));
+    supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: dest }));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => s && navigate({ to: dest }));
     return () => data.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, dest]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
