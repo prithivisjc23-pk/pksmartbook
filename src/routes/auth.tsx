@@ -18,8 +18,8 @@ export const Route = createFileRoute("/auth")({
       { property: "og:description", content: "Sign in or create your SolluBook AI shop account." },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  validateSearch: (s: Record<string, unknown>): { redirect?: string | undefined } => ({
+    redirect: typeof s["redirect"] === "string" ? s["redirect"] : undefined,
   }),
   component: AuthPage,
 });
