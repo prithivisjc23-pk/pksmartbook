@@ -22,11 +22,11 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { t } = useI18n();
   const features = [
-    { icon: TrendingUp, label: `${t("sales")} & ${t("expenses")}` },
-    { icon: Users, label: t("pending") },
-    { icon: Package, label: t("lowStock") },
-    { icon: Languages, label: "English · தமிழ்" },
-  ];
+    { icon: TrendingUp, label: `${t("sales")} & ${t("expenses")}`, to: "/records" },
+    { icon: Users, label: t("pending"), to: "/customers" },
+    { icon: Package, label: t("lowStock"), to: "/inventory" },
+    { icon: Languages, label: "English · தமிழ்", to: "/dashboard" },
+  ] as const;
   return (
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
@@ -47,9 +47,9 @@ function Index() {
           </Button>
           <div className="mt-10 grid grid-cols-2 gap-3">
             {features.map((f) => (
-              <div key={f.label} className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm font-medium">
+              <Link key={f.label} to={f.to} className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm font-medium transition hover:border-primary hover:shadow-soft">
                 <f.icon className="h-5 w-5 text-accent" /> {f.label}
-              </div>
+              </Link>
             ))}
           </div>
         </div>
