@@ -61,6 +61,12 @@ const en = {
   adminOnly: "Only admins can see this page.",
   saved: "Saved",
   deleted: "Deleted",
+  waReminder: "WhatsApp reminder",
+  printReceipt: "Receipt",
+  receiptNo: "Receipt no",
+  receiptThanks: "Thank you! Visit again.",
+  waMsg: (name: string, amount: string, shop: string) =>
+    `Hello ${name}, this is a friendly reminder from ${shop}. Your pending balance is ${amount}. Please pay when convenient. Thank you!`,
 };
 type Dict = typeof en;
 const ta: Dict = {
@@ -124,11 +130,17 @@ const ta: Dict = {
   adminOnly: "நிர்வாகிகள் மட்டுமே இதைப் பார்க்க முடியும்.",
   saved: "சேமிக்கப்பட்டது",
   deleted: "நீக்கப்பட்டது",
+  waReminder: "WhatsApp நினைவூட்டல்",
+  printReceipt: "ரசீது",
+  receiptNo: "ரசீது எண்",
+  receiptThanks: "நன்றி! மீண்டும் வாருங்கள்.",
+  waMsg: (name: string, amount: string, shop: string) =>
+    `வணக்கம் ${name}, ${shop} கடையிலிருந்து நட்பான நினைவூட்டல். உங்கள் நிலுவை தொகை ${amount}. வசதியானபோது செலுத்தவும். நன்றி!`,
 };
 
 export type Lang = "en" | "ta";
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof Dict) => string };
-const I18nContext = createContext<Ctx>({ lang: "en", setLang: () => {}, t: (k) => en[k] });
+type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: <K extends keyof Dict>(k: K) => Dict[K] };
+const I18nContext = createContext<Ctx>({ lang: "en", setLang: () => {}, t: (k) => en[k] as never });
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
@@ -142,7 +154,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
   const dict = lang === "ta" ? ta : en;
   return (
-    <I18nContext.Provider value={{ lang, setLang, t: (k) => dict[k] }}>
+    <I18nContext.Provider value={{ lang, setLang, t: (k) => dict[k] as never }}>
       {children}
     </I18nContext.Provider>
   );

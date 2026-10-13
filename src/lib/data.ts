@@ -30,6 +30,16 @@ export const customersQuery = {
     return data as unknown as Customer[];
   },
 };
+export type Profile = { id: string; full_name: string | null; shop_name: string | null };
+export const profileQuery = {
+  queryKey: ["profile"],
+  queryFn: async () => {
+    const uid = await myId();
+    const { data, error } = await supabase.from("profiles").select("id, full_name, shop_name").eq("id", uid).maybeSingle();
+    if (error) throw error;
+    return data as Profile | null;
+  },
+};
 export const productsQuery = {
   queryKey: ["products"],
   queryFn: async () => {

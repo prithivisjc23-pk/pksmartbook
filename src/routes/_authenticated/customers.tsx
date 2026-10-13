@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Phone } from "lucide-react";
+import { Plus, Pencil, Trash2, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n, inr } from "@/lib/i18n";
-import { customersQuery, type Customer } from "@/lib/data";
+import { customersQuery, profileQuery, type Customer } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/customers")({
   head: () => ({ meta: [{ title: "Customers — SolluBook AI" }, { name: "description", content: "Customers and pending payments." }] }),
@@ -22,6 +22,7 @@ function Customers() {
   const { t } = useI18n();
   const qc = useQueryClient();
   const list = useQuery(customersQuery).data ?? [];
+  const profile = useQuery(profileQuery).data;
   const [editing, setEditing] = useState<Customer | null>(null);
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(blank);
@@ -39,6 +40,12 @@ function Customers() {
     const { error } = editing ? await supabase.from("customers").update(row).eq("id", editing.id) : await supabase.from("customers").insert(row);
     if (error) { toast.error(error.message); return; }
     toast.success(t("saved")); setOpen(false); refresh();
+  }
+  function waReminder(c: Customer) {
+    const shop = profile?.shop_name || t("appName");
+    const text = encodeURIComponent(t("waMsg")(c.name, inr(Number(c.pending_amount)), shop));
+    const digits = (c.phone ?? "").replace(/\D/g, "");
+    window.open(digits ? `https://wa.me/${digits}?text=${text}` : `https://wa.me/?text=${text}`, "_blank");
   }
   async function markPaid(c: Customer) {
     const { error } = await supabase.from("customers").update({ pending_amount: 0 }).eq("id", c.id);
@@ -77,7 +84,14 @@ function Customers() {
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className={`font-semibold ${Number(c.pending_amount) > 0 ? "text-warning" : "text-success"}`}>{inr(Number(c.pending_amount))}</span>
-              {Number(c.pending_amount) > 0 && <Button size="sm" variant="outline" className="rounded-full" onClick={() => markPaid(c)}>{t("markPaid")}</Button>}
+              {Number(c.pending_amount) > 0 && (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="rounded-full text-success" onClick={() => waReminder(c)}>
+                    <MessageCircle className="h-4 w-4" /> {t("waReminder")}
+                  </Button>
+                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => markPaid(c)}>{t("markPaid")}</Button>
+                </div>
+              )}
             </div>
           </div>
         ))}
