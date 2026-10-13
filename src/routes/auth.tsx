@@ -52,7 +52,7 @@ function AuthPage() {
       const { data, error } = await supabase.auth.signUp({
         email: f.email,
         password: f.password,
-        options: { emailRedirectTo: window.location.origin + "/dashboard", data: { full_name: f.full_name, shop_name: f.shop_name } },
+        options: { emailRedirectTo: window.location.origin + dest, data: { full_name: f.full_name, shop_name: f.shop_name } },
       });
       if (error) toast.error(error.message);
       else if (!data.session) toast.success(t("checkEmail"));
