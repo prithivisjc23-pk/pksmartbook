@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 const en = {
-  appName: "SolluBook AI",
+  appName: "PK SmartBook AI",
   tagline: "Your shop's money, made simple.",
   heroText: "Track sales, expenses, customers and stock — no accounting knowledge needed.",
   getStarted: "Get started free",
@@ -70,7 +70,7 @@ const en = {
 };
 type Dict = typeof en;
 const ta: Dict = {
-  appName: "சொல்லுபுக் AI",
+  appName: "PK ஸ்மார்ட்புக் AI",
   tagline: "உங்கள் கடையின் கணக்கு, எளிமையாக.",
   heroText: "விற்பனை, செலவு, வாடிக்கையாளர், சரக்கு — கணக்கியல் அறிவு தேவையில்லை.",
   getStarted: "இலவசமாக தொடங்குங்கள்",

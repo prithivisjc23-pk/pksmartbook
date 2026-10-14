@@ -12,7 +12,7 @@ import { useI18n, inr } from "@/lib/i18n";
 import { customersQuery, profileQuery, type Customer } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/customers")({
-  head: () => ({ meta: [{ title: "Customers — SolluBook AI" }, { name: "description", content: "Customers and pending payments." }] }),
+  head: () => ({ meta: [{ title: "Customers — PK SmartBook AI" }, { name: "description", content: "Customers and pending payments." }] }),
   component: Customers,
 });
 

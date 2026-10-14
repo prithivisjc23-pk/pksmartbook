@@ -12,7 +12,7 @@ import { useI18n, inr } from "@/lib/i18n";
 import { productsQuery, isLow, type Product } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
-  head: () => ({ meta: [{ title: "Stock — SolluBook AI" }, { name: "description", content: "Inventory and low-stock alerts." }] }),
+  head: () => ({ meta: [{ title: "Stock — PK SmartBook AI" }, { name: "description", content: "Inventory and low-stock alerts." }] }),
   component: Inventory,
 });
 

@@ -9,7 +9,7 @@ import { txnsQuery, totals, profileQuery, type Txn } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
 
 export const Route = createFileRoute("/_authenticated/records")({
-  head: () => ({ meta: [{ title: "Sales & Expenses — SolluBook AI" }, { name: "description", content: "View and edit your sales and expenses." }] }),
+  head: () => ({ meta: [{ title: "Sales & Expenses — PK SmartBook AI" }, { name: "description", content: "View and edit your sales and expenses." }] }),
   component: Records,
 });
 
