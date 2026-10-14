@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowDownCircle, ArrowUpCircle, Wallet, AlertTriangle, Clock } from "lucide-react";
 import { useI18n, inr } from "@/lib/i18n";
-import { txnsQuery, customersQuery, productsQuery, totals, isLow } from "@/lib/data";
+import { txnsQuery, customersQuery, productsQuery, totals, stockLevel } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — SolluBook AI" }, { name: "description", content: "Your shop at a glance." }] }),
+  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook AI" }, { name: "description", content: "Your shop at a glance." }] }),
   component: Dashboard,
 });
 
@@ -17,7 +17,7 @@ function Dashboard() {
   const products = useQuery(productsQuery).data ?? [];
   const { sales, expenses, balance } = totals(txns);
   const pending = customers.filter((c) => Number(c.pending_amount) > 0);
-  const low = products.filter(isLow);
+  const low = products.filter((p) => stockLevel(p.quantity) !== "ok");
 
   return (
     <div className="space-y-6">
@@ -41,7 +41,7 @@ function Dashboard() {
         </Panel>
         <Panel title={t("lowStock")} icon={AlertTriangle} link="/inventory">
           {low.length === 0 ? <Empty text={t("allGood")} /> : low.slice(0, 5).map((p) => (
-            <Row key={p.id} left={p.name} right={`${p.quantity}`} tone="text-destructive" />
+            <Row key={p.id} left={p.name} right={`${p.quantity} ${p.unit ?? "Pcs"}`} tone={p.quantity <= 0 ? "text-destructive" : "text-warning"} />
           ))}
         </Panel>
       </div>
@@ -51,6 +51,7 @@ function Dashboard() {
             right={`${x.kind === "sale" ? "+" : "−"}${inr(Number(x.amount))}`} tone={x.kind === "sale" ? "text-success" : "text-destructive"} />
         ))}
       </Panel>
+      <p className="pt-4 text-center text-xs text-muted-foreground">{t("poweredBy")}</p>
     </div>
   );
 }

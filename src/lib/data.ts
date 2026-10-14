@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 export type Txn = {
   id: string; kind: "sale" | "expense"; amount: number; description: string | null;
   category: string | null; customer_id: string | null; txn_date: string;
+  product_id?: string | null; quantity?: number; unit?: string | null;
 };
 export type Customer = { id: string; name: string; phone: string | null; pending_amount: number; notes: string | null };
-export type Product = { id: string; name: string; quantity: number; low_stock_threshold: number; price: number };
+export type Product = { id: string; name: string; quantity: number; low_stock_threshold: number; price: number; unit?: string; category?: string | null };
 
 async function myId() {
   const { data } = await supabase.auth.getUser();
@@ -57,3 +58,29 @@ export function totals(txns: Txn[]) {
 }
 
 export const isLow = (p: Pick<Product, "quantity" | "low_stock_threshold">) => p.quantity <= p.low_stock_threshold;
+
+export const UNITS = ["Pcs", "Kg", "Grams", "Litre", "Packet"] as const;
+export const SALE_CATEGORIES = ["Grocery", "Vegetables", "Dairy", "Snacks", "Beverages", "Stationery", "Other"];
+export const EXPENSE_CATEGORIES = ["Stock purchase", "Rent", "Electricity", "Salary", "Transport", "Other"];
+
+/** out = 0, low = below 5, ok otherwise */
+export const stockLevel = (q: number): "out" | "low" | "ok" => (q <= 0 ? "out" : q < 5 ? "low" : "ok");
+
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+export { ymd };
+export type DateFilter = { kind: "today" | "yesterday" | "week" | "day"; day?: string };
+/** inclusive [from, to] YYYY-MM-DD range; week = Monday..today */
+export function dateRange(f: DateFilter, now = new Date()): [string, string] {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (f.kind === "yesterday") { d.setDate(d.getDate() - 1); return [ymd(d), ymd(d)]; }
+  if (f.kind === "week") { const s = new Date(d); s.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return [ymd(s), ymd(d)]; }
+  if (f.kind === "day" && f.day) return [f.day, f.day];
+  return [ymd(d), ymd(d)];
+}
+
+/** universal wa.me link — OS shows chooser when WhatsApp + Business are installed */
+export function waLink(text: string, phone?: string | null) {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  const num = digits.length === 10 ? "91" + digits : digits;
+  return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+}

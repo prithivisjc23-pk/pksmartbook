@@ -9,10 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n, inr } from "@/lib/i18n";
-import { customersQuery, profileQuery, type Customer } from "@/lib/data";
+import { customersQuery, profileQuery, waLink, type Customer } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/customers")({
-  head: () => ({ meta: [{ title: "Customers — SolluBook AI" }, { name: "description", content: "Customers and pending payments." }] }),
+  head: () => ({ meta: [{ title: "Customers — PK SmartBook AI" }, { name: "description", content: "Customers and pending payments." }] }),
   component: Customers,
 });
 
@@ -43,9 +43,7 @@ function Customers() {
   }
   function waReminder(c: Customer) {
     const shop = profile?.shop_name || t("appName");
-    const text = encodeURIComponent(t("waMsg")(c.name, inr(Number(c.pending_amount)), shop));
-    const digits = (c.phone ?? "").replace(/\D/g, "");
-    window.open(digits ? `https://wa.me/${digits}?text=${text}` : `https://wa.me/?text=${text}`, "_blank");
+    window.open(waLink(t("waMsg")(c.name, inr(Number(c.pending_amount)), shop), c.phone), "_blank");
   }
   async function markPaid(c: Customer) {
     const { error } = await supabase.from("customers").update({ pending_amount: 0 }).eq("id", c.id);

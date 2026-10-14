@@ -30,7 +30,7 @@ export function AppShell() {
     <div className="min-h-screen md:flex">
       <aside className="hidden w-60 shrink-0 flex-col bg-sidebar p-4 text-sidebar-foreground md:flex">
         <div className="mb-8 px-2 font-display text-2xl font-bold">
-          Sollu<span className="text-sidebar-primary">Book</span>
+          PK <span className="text-sidebar-primary">SmartBook</span> AI
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {nav.map((n) => (
@@ -52,7 +52,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col pb-20 md:pb-0">
         <header className="flex items-center justify-between gap-2 border-b bg-card px-4 py-3 md:px-8">
           <span className="font-display text-xl font-bold md:invisible">
-            Sollu<span className="text-accent">Book</span>
+            PK <span className="text-accent">SmartBook</span> AI
           </span>
           <div className="flex items-center gap-2">
             <LangToggle />

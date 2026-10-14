@@ -8,6 +8,13 @@
       "when": 1791902072772,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791991532399,
+      "tag": "0001_units_and_stock_deduction",
+      "breakpoints": true
     }
   ]
 }
