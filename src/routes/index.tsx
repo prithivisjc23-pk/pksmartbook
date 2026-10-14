@@ -53,7 +53,7 @@ function Index() {
             ))}
           </div>
         </div>
-        <img src={hero} alt="Shop owner using SolluBook on a phone" className="w-full rounded-3xl shadow-soft" width={1280} height={960} />
+        <img src={hero} alt="Shop owner using PK SmartBook AI on a phone" className="w-full rounded-3xl shadow-soft" width={1280} height={960} />
       </section>
     </div>
   );
