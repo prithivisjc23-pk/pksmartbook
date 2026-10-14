@@ -93,6 +93,7 @@ function AuthPage() {
           {mode === "in" ? t("noAccount") : t("haveAccount")}
         </button>
       </div>
+      <p className="mt-6 text-sm font-semibold text-primary-foreground/90">{t("poweredBy")}</p>
     </div>
   );
 }
