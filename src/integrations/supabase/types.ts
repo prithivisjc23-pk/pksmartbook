@@ -46,30 +46,36 @@ export type Database = {
       }
       products: {
         Row: {
+          category: string | null
           created_at: string
           id: string
           low_stock_threshold: number
           name: string
           price: number
           quantity: number
+          unit: string
           user_id: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           id?: string
           low_stock_threshold?: number
           name: string
           price?: number
           quantity?: number
+          unit?: string
           user_id?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           id?: string
           low_stock_threshold?: number
           name?: string
           price?: number
           quantity?: number
+          unit?: string
           user_id?: string
         }
         Relationships: []
@@ -110,7 +116,10 @@ export type Database = {
           description: string | null
           id: string
           kind: string
+          product_id: string | null
+          quantity: number
           txn_date: string
+          unit: string | null
           user_id: string
         }
         Insert: {
@@ -121,7 +130,10 @@ export type Database = {
           description?: string | null
           id?: string
           kind: string
+          product_id?: string | null
+          quantity?: number
           txn_date?: string
+          unit?: string | null
           user_id?: string
         }
         Update: {
@@ -132,7 +144,10 @@ export type Database = {
           description?: string | null
           id?: string
           kind?: string
+          product_id?: string | null
+          quantity?: number
           txn_date?: string
+          unit?: string | null
           user_id?: string
         }
         Relationships: [
@@ -141,6 +156,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
