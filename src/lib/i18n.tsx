@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 const en = {
-  appName: "PK SmartBook AI",
+  appName: "PK SmartBook",
   tagline: "Your shop's money, made simple.",
   heroText: "Track sales, expenses, customers and stock — no accounting knowledge needed.",
   getStarted: "Get started free",
@@ -73,17 +73,17 @@ const en = {
   cashFlow: "Cash flow",
   outOfStock: "Out of stock",
   shareWa: "Share on WhatsApp",
-  poweredBy: "Powered by PK SmartBook AI",
+  poweredBy: "Powered by PK SmartBook",
   syncing: "Syncing your smart store...",
   stockItem: "Stock item (reduces stock)",
   waBill: (shop: string, no: string, item: string, amount: string, date: string) =>
-    `${shop}\nBill no: ${no}\nDate: ${date}\nItem: ${item}\nTotal: ${amount}\nThank you! — PK SmartBook AI`,
+    `${shop}\nBill no: ${no}\nDate: ${date}\nItem: ${item}\nTotal: ${amount}\nThank you! — PK SmartBook`,
   waMsg: (name: string, amount: string, shop: string) =>
     `Hello ${name}, this is a friendly reminder from ${shop}. Your pending balance is ${amount}. Please pay when convenient. Thank you!`,
 };
 type Dict = typeof en;
 const ta: Dict = {
-  appName: "PK ஸ்மார்ட்புக் AI",
+  appName: "PK ஸ்மார்ட்புக்",
   tagline: "உங்கள் கடையின் கணக்கு, எளிமையாக.",
   heroText: "விற்பனை, செலவு, வாடிக்கையாளர், சரக்கு — கணக்கியல் அறிவு தேவையில்லை.",
   getStarted: "இலவசமாக தொடங்குங்கள்",
@@ -155,11 +155,11 @@ const ta: Dict = {
   cashFlow: "பண ஓட்டம்",
   outOfStock: "சரக்கு இல்லை",
   shareWa: "WhatsApp-ல் பகிர்",
-  poweredBy: "PK SmartBook AI மூலம் இயக்கப்படுகிறது",
+  poweredBy: "PK SmartBook மூலம் இயக்கப்படுகிறது",
   syncing: "உங்கள் கடை ஒத்திசைக்கப்படுகிறது...",
   stockItem: "சரக்கு பொருள் (சரக்கு குறையும்)",
   waBill: (shop: string, no: string, item: string, amount: string, date: string) =>
-    `${shop}\nரசீது எண்: ${no}\nதேதி: ${date}\nபொருள்: ${item}\nமொத்தம்: ${amount}\nநன்றி! — PK SmartBook AI`,
+    `${shop}\nரசீது எண்: ${no}\nதேதி: ${date}\nபொருள்: ${item}\nமொத்தம்: ${amount}\nநன்றி! — PK SmartBook`,
   waMsg: (name: string, amount: string, shop: string) =>
     `வணக்கம் ${name}, ${shop} கடையிலிருந்து நட்பான நினைவூட்டல். உங்கள் நிலுவை தொகை ${amount}. வசதியானபோது செலுத்தவும். நன்றி!`,
 };

@@ -12,10 +12,10 @@ import { useI18n } from "@/lib/i18n";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — PK SmartBook AI" },
-      { name: "description", content: "Sign in or create your PK SmartBook AI shop account." },
-      { property: "og:title", content: "Sign in — PK SmartBook AI" },
-      { property: "og:description", content: "Sign in or create your PK SmartBook AI shop account." },
+      { title: "Sign in — PK SmartBook" },
+      { name: "description", content: "Sign in or create your PK SmartBook shop account." },
+      { property: "og:title", content: "Sign in — PK SmartBook" },
+      { property: "og:description", content: "Sign in or create your PK SmartBook shop account." },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { redirect?: string | undefined } => ({
@@ -70,7 +70,7 @@ function AuthPage() {
       <div className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-soft md:p-8">
         <div className="mb-6 flex items-center justify-between">
           <Link to="/" className="font-display text-2xl font-bold text-primary">
-            PK <span className="text-accent">SmartBook</span> AI
+            PK <span className="text-accent">SmartBook</span>
           </Link>
           <LangToggle />
         </div>

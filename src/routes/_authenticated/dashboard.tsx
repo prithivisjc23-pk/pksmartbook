@@ -6,7 +6,7 @@ import { txnsQuery, customersQuery, productsQuery, totals, stockLevel } from "@/
 import { TxnDialog } from "@/components/TxnDialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook AI" }, { name: "description", content: "Your shop at a glance." }] }),
+  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook" }, { name: "description", content: "Your shop at a glance." }] }),
   component: Dashboard,
 });
 
