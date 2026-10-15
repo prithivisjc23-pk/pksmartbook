@@ -1,50 +1,80 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowDownCircle, ArrowUpCircle, Wallet, AlertTriangle, Clock } from "lucide-react";
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowDownCircle, ArrowUpCircle, Wallet, AlertTriangle, Clock, HandCoins } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useI18n, inr } from "@/lib/i18n";
-import { txnsQuery, customersQuery, productsQuery, totals, stockLevel } from "@/lib/data";
+import { useMode } from "@/lib/mode";
+import { txnsQuery, customersQuery, productsQuery, totals, stockLevel, dateRange, pendingTotal, shopId, ymd, type DateFilter } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
+import { DateFilterBar } from "@/components/DateFilterBar";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook AI" }, { name: "description", content: "Your shop at a glance." }] }),
+  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook" }, { name: "description", content: "Today's sales, expenses, balance and customer pending at a glance." }] }),
   component: Dashboard,
 });
 
 function Dashboard() {
   const { t } = useI18n();
-  const txns = useQuery(txnsQuery).data ?? [];
+  const mode = useMode();
+  const { role } = useRouteContext({ from: "/_authenticated" });
+  const all = useQuery(txnsQuery).data ?? [];
   const customers = useQuery(customersQuery).data ?? [];
   const products = useQuery(productsQuery).data ?? [];
+  const [df, setDf] = useState<DateFilter>({ kind: "today" });
+  const [from, to] = dateRange(df);
+  const txns = all.filter((x) => x.txn_date >= from && x.txn_date <= to);
   const { sales, expenses, balance } = totals(txns);
+  const kadan = pendingTotal(customers);
   const pending = customers.filter((c) => Number(c.pending_amount) > 0);
   const low = products.filter((p) => stockLevel(p.quantity) !== "ok");
 
+  const cats = new Map<string, number>();
+  txns.forEach((x) => cats.set(x.category || "—", (cats.get(x.category || "—") ?? 0) + (x.kind === "sale" ? 1 : -1) * Number(x.amount)));
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        <TxnDialog kind="sale" />
-        <TxnDialog kind="expense" />
+    <div className="space-y-5">
+      <DateFilterBar value={df} onChange={setDf} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stat label={t("todaySales")} value={sales} icon={ArrowUpCircle} cls="border-success/40 bg-success/10 text-success" />
+        <Stat label={t("todayExpenses")} value={expenses} icon={ArrowDownCircle} cls="border-destructive/40 bg-destructive/10 text-destructive" />
+        <Stat label={t("netBalance")} value={balance} icon={Wallet} cls="border-primary/40 bg-primary/10 text-primary" />
+        <Stat label={t("kadan")} value={kadan} icon={HandCoins} cls="border-warning/50 bg-warning/15 text-warning" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label={t("totalSales")} value={sales} icon={ArrowUpCircle} tone="text-success" />
-        <Stat label={t("totalExpenses")} value={expenses} icon={ArrowDownCircle} tone="text-destructive" />
-        <div className="rounded-2xl bg-hero p-5 text-primary-foreground shadow-soft">
-          <div className="flex items-center gap-2 text-sm opacity-90"><Wallet className="h-4 w-4" /> {t("balance")}</div>
-          <div className="mt-2 font-display text-3xl font-bold">{inr(balance)}</div>
-        </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Panel title={t("pending")} icon={Clock} link="/customers">
-          {pending.length === 0 ? <Empty text={t("allGood")} /> : pending.slice(0, 5).map((c) => (
-            <Row key={c.id} left={c.name} right={inr(Number(c.pending_amount))} tone="text-warning" />
-          ))}
-        </Panel>
-        <Panel title={t("lowStock")} icon={AlertTriangle} link="/inventory">
-          {low.length === 0 ? <Empty text={t("allGood")} /> : low.slice(0, 5).map((p) => (
-            <Row key={p.id} left={p.name} right={`${p.quantity} ${p.unit ?? "Pcs"}`} tone={p.quantity <= 0 ? "text-destructive" : "text-warning"} />
-          ))}
-        </Panel>
-      </div>
+
+      {mode === "worker" ? <QuickEntry /> : (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <TxnDialog kind="sale" trigger={<Button className="h-16 rounded-2xl text-lg">{t("addSale")}</Button>} />
+            <TxnDialog kind="expense" trigger={<Button variant="secondary" className="h-16 rounded-2xl text-lg">{t("addExpense")}</Button>} />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Panel title={t("pending")} icon={Clock} link="/customers">
+              {pending.length === 0 ? <Empty text={t("allGood")} /> : pending.slice(0, 5).map((c) => (
+                <Row key={c.id} left={c.name} right={inr(Number(c.pending_amount))} tone="text-warning" />
+              ))}
+            </Panel>
+            {role === "owner" && (
+              <Panel title={t("lowStock")} icon={AlertTriangle} link="/inventory">
+                {low.length === 0 ? <Empty text={t("allGood")} /> : low.slice(0, 5).map((p) => (
+                  <Row key={p.id} left={p.name} right={`${p.quantity} ${p.unit ?? "Pcs"}`} tone={p.quantity <= 0 ? "text-destructive" : "text-warning"} />
+                ))}
+              </Panel>
+            )}
+          </div>
+          {role === "owner" && (
+            <Panel title={t("profitLoss")} link="/records">
+              {cats.size === 0 ? <Empty text={t("empty")} /> : [...cats].sort((a, b) => b[1] - a[1]).map(([c, v]) => (
+                <Row key={c} left={c} right={`${v >= 0 ? "+" : "−"}${inr(Math.abs(v))}`} tone={v >= 0 ? "text-success" : "text-destructive"} />
+              ))}
+            </Panel>
+          )}
+        </>
+      )}
+
       <Panel title={t("recent")} link="/records">
         {txns.length === 0 ? <Empty text={t("empty")} /> : txns.slice(0, 6).map((x) => (
           <Row key={x.id} left={`${x.description || (x.kind === "sale" ? t("sales") : t("expenses"))} · ${x.txn_date}`}
@@ -56,11 +86,49 @@ function Dashboard() {
   );
 }
 
-function Stat({ label, value, icon: Icon, tone }: { label: string; value: number; icon: typeof Wallet; tone: string }) {
+function QuickEntry() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const [kind, setKind] = useState<"sale" | "expense" | null>(null);
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!kind || !Number(amount)) return;
+    setBusy(true);
+    const { error } = await supabase.from("transactions").insert({ user_id: await shopId(), kind, amount: Number(amount), txn_date: ymd(new Date()) });
+    setBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(t("saved")); setAmount(""); setKind(null);
+    qc.invalidateQueries({ queryKey: ["txns"] });
+  }
+
+  if (!kind) return (
+    <div className="grid grid-cols-2 gap-3">
+      <button onClick={() => setKind("sale")} className="h-36 rounded-3xl bg-success font-display text-3xl font-bold text-success-foreground shadow-soft">{t("varavu")}</button>
+      <button onClick={() => setKind("expense")} className="h-36 rounded-3xl bg-destructive font-display text-3xl font-bold text-destructive-foreground shadow-soft">{t("selavu")}</button>
+    </div>
+  );
   return (
-    <div className="rounded-2xl border bg-card p-5">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground"><Icon className={`h-4 w-4 ${tone}`} /> {label}</div>
-      <div className="mt-2 font-display text-3xl font-bold">{inr(value)}</div>
+    <form onSubmit={save} className={`space-y-3 rounded-3xl border-2 p-5 ${kind === "sale" ? "border-success" : "border-destructive"}`}>
+      <div className={`font-display text-2xl font-bold ${kind === "sale" ? "text-success" : "text-destructive"}`}>{kind === "sale" ? t("varavu") : t("selavu")}</div>
+      <p className="text-sm text-muted-foreground">{t("quickHint")}</p>
+      <Input autoFocus type="number" inputMode="decimal" min="1" step="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)}
+        placeholder="₹" className="h-16 text-center text-3xl font-bold" />
+      <div className="grid grid-cols-2 gap-3">
+        <Button type="button" variant="outline" className="h-14 rounded-2xl text-lg" onClick={() => setKind(null)}>{t("cancel")}</Button>
+        <Button type="submit" disabled={busy} className="h-14 rounded-2xl text-lg">{t("save")}</Button>
+      </div>
+    </form>
+  );
+}
+
+function Stat({ label, value, icon: Icon, cls }: { label: string; value: number; icon: typeof Wallet; cls: string }) {
+  return (
+    <div className={`rounded-2xl border-2 p-4 ${cls}`}>
+      <div className="flex items-center gap-1.5 text-sm font-semibold"><Icon className="h-4 w-4" /> {label}</div>
+      <div className="mt-1 font-display text-2xl font-bold text-foreground md:text-3xl">{inr(value)}</div>
     </div>
   );
 }

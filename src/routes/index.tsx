@@ -8,9 +8,9 @@ import hero from "@/assets/hero.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PK SmartBook AI — Simple accounts for Indian shops" },
+      { title: "PK SmartBook — Simple accounts for Indian shops" },
       { name: "description", content: "Track sales, expenses, customer dues and stock in Tamil or English. Built for small shop owners." },
-      { property: "og:title", content: "PK SmartBook AI — Simple accounts for Indian shops" },
+      { property: "og:title", content: "PK SmartBook — Simple accounts for Indian shops" },
       { property: "og:description", content: "Track sales, expenses, customer dues and stock in Tamil or English." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -31,7 +31,7 @@ function Index() {
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <span className="font-display text-2xl font-bold text-primary">
-          PK <span className="text-accent">SmartBook</span> AI
+          PK <span className="text-accent">SmartBook</span>
         </span>
         <div className="flex items-center gap-2">
           <LangToggle />
@@ -53,7 +53,7 @@ function Index() {
             ))}
           </div>
         </div>
-        <img src={hero} alt="Shop owner using PK SmartBook AI on a phone" className="w-full rounded-3xl shadow-soft" width={1280} height={960} />
+        <img src={hero} alt="Shop owner using PK SmartBook on a phone" className="w-full rounded-3xl shadow-soft" width={1280} height={960} />
       </section>
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { totals, isLow, stockLevel, dateRange, waLink, type Txn } from "./data";
+import { pendingTotal, totals, isLow, stockLevel, dateRange, waLink, type Txn } from "./data";
 
 const tx = (kind: "sale" | "expense", amount: number) => ({ id: "x", kind, amount, description: null, category: null, customer_id: null, txn_date: "2026-01-01" }) as Txn;
 
@@ -24,5 +24,11 @@ describe("business rules", () => {
   });
   it("whatsapp uses wa.me with India code", () => {
     expect(waLink("hi", "98765 43210")).toBe("https://wa.me/919876543210?text=hi");
+  });
+  it("this month runs from the 1st to today", () => {
+    expect(dateRange({ kind: "month" }, new Date(2026, 9, 14))).toEqual(["2026-10-01", "2026-10-14"]);
+  });
+  it("pending balance sums every customer", () => {
+    expect(pendingTotal([{ pending_amount: 200 }, { pending_amount: 0 }, { pending_amount: 150.5 }])).toBe(350.5);
   });
 });

@@ -107,6 +107,33 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_members: {
+        Row: {
+          contact: string
+          created_at: string
+          id: string
+          member_id: string | null
+          owner_id: string
+          role: string
+        }
+        Insert: {
+          contact: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          owner_id?: string
+          role?: string
+        }
+        Update: {
+          contact?: string
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          owner_id?: string
+          role?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -116,6 +143,7 @@ export type Database = {
           description: string | null
           id: string
           kind: string
+          on_credit: boolean
           product_id: string | null
           quantity: number
           txn_date: string
@@ -130,6 +158,7 @@ export type Database = {
           description?: string | null
           id?: string
           kind: string
+          on_credit?: boolean
           product_id?: string | null
           quantity?: number
           txn_date?: string
@@ -144,6 +173,7 @@ export type Database = {
           description?: string | null
           id?: string
           kind?: string
+          on_credit?: boolean
           product_id?: string | null
           quantity?: number
           txn_date?: string
@@ -190,6 +220,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_shop: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -197,6 +228,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_shop_staff: { Args: { _owner: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

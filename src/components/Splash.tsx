@@ -14,7 +14,7 @@ export function Splash() {
   return (
     <div aria-hidden className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-hero text-primary-foreground transition-opacity duration-500 ${phase === "fade" ? "opacity-0" : "opacity-100"}`}>
       <div className="splash-logo font-display text-4xl font-bold md:text-5xl">
-        PK <span className="text-accent">SmartBook</span> AI
+        PK <span className="text-accent">SmartBook</span>
       </div>
       <div className="mt-8 h-8 w-8 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
       <p className="mt-3 text-sm opacity-80">{t("syncing")}</p>

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useI18n, inr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Admin — PK SmartBook AI" }, { name: "description", content: "Admin overview of all shops." }] }),
+  head: () => ({ meta: [{ title: "Admin — PK SmartBook" }, { name: "description", content: "Admin overview of all shops." }] }),
   component: Admin,
 });
 
