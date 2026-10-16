@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Phone, MessageCircle } from "lucide-react";
@@ -21,6 +21,7 @@ const blank = { name: "", phone: "", pending_amount: "0", notes: "" };
 function Customers() {
   const { t } = useI18n();
   const qc = useQueryClient();
+  const owner = useRouteContext({ from: "/_authenticated" }).role === "owner";
   const list = useQuery(customersQuery).data ?? [];
   const profile = useQuery(profileQuery).data;
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -64,7 +65,7 @@ function Customers() {
           <h1 className="text-3xl font-bold">{t("customers")}</h1>
           <p className="text-sm text-muted-foreground">{t("pending")}: <span className="font-semibold text-warning">{inr(totalPending)}</span></p>
         </div>
-        <Button onClick={() => startEdit()} className="h-11 rounded-full px-5"><Plus className="h-4 w-4" /> {t("addCustomer")}</Button>
+        {owner && <Button onClick={() => startEdit()} className="h-11 rounded-full px-5"><Plus className="h-4 w-4" /> {t("addCustomer")}</Button>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {list.length === 0 && <p className="text-muted-foreground">{t("empty")}</p>}
@@ -75,10 +76,10 @@ function Customers() {
                 <div className="truncate font-display text-lg font-bold">{c.name}</div>
                 {c.phone && <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-sm text-muted-foreground"><Phone className="h-3 w-3" />{c.phone}</a>}
               </div>
-              <div className="flex">
+              {owner && <div className="flex">
                 <button aria-label={t("edit")} onClick={() => startEdit(c)} className="p-2 text-muted-foreground"><Pencil className="h-4 w-4" /></button>
                 <button aria-label={t("delete")} onClick={() => remove(c)} className="p-2 text-muted-foreground"><Trash2 className="h-4 w-4" /></button>
-              </div>
+              </div>}
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className={`font-semibold ${Number(c.pending_amount) > 0 ? "text-warning" : "text-success"}`}>{inr(Number(c.pending_amount))}</span>
@@ -87,7 +88,7 @@ function Customers() {
                   <Button size="sm" variant="outline" className="rounded-full text-success" onClick={() => waReminder(c)}>
                     <MessageCircle className="h-4 w-4" /> {t("waReminder")}
                   </Button>
-                  <Button size="sm" variant="outline" className="rounded-full" onClick={() => markPaid(c)}>{t("markPaid")}</Button>
+                  {owner && <Button size="sm" variant="outline" className="rounded-full" onClick={() => markPaid(c)}>{t("markPaid")}</Button>}
                 </div>
               )}
             </div>

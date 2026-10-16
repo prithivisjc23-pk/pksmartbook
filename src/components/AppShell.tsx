@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { Link, Outlet, useNavigate, useRouteContext } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, ReceiptIndianRupee, Users, Package, ShieldCheck, LogOut, UserCog } from "lucide-react";
+import { LayoutDashboard, ReceiptIndianRupee, Users, Package, ShieldCheck, LogOut, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { useMode, setMode } from "@/lib/mode";
 import { profileQuery } from "@/lib/data";
 import { LangToggle } from "./LangToggle";
 
@@ -13,7 +12,6 @@ export function AppShell() {
   const { isAdmin, role } = useRouteContext({ from: "/_authenticated" });
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const mode = useMode();
   const profile = useQuery(profileQuery).data;
   const owner = role === "owner";
 
@@ -35,8 +33,9 @@ export function AppShell() {
   const nav = [
     { to: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     { to: "/records", label: t("records"), icon: ReceiptIndianRupee },
-    ...(mode === "shop" ? [{ to: "/customers", label: t("customers"), icon: Users }] as const : []),
-    ...(mode === "shop" && owner ? [{ to: "/inventory", label: t("inventory"), icon: Package }, { to: "/team", label: t("team"), icon: UserCog }] as const : []),
+    { to: "/customers", label: t("customers"), icon: Users },
+    ...(owner ? [{ to: "/inventory", label: t("inventory"), icon: Package }] as const : []),
+    { to: "/settings", label: t("settings"), icon: Settings },
     ...(isAdmin ? [{ to: "/admin", label: t("admin"), icon: ShieldCheck }] as const : []),
   ];
 
@@ -48,15 +47,6 @@ export function AppShell() {
   }
 
   const brand = profile?.shop_name || t("appName");
-  const modeSwitch = (
-    <div className="inline-flex rounded-full border bg-card p-0.5 text-sm">
-      {([["shop", t("shopkeeper")], ["worker", t("worker")]] as const).map(([m, l]) => (
-        <button key={m} onClick={() => setMode(m)}
-          className={`rounded-full px-3 py-1 font-medium ${mode === m ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}>{l}</button>
-      ))}
-    </div>
-  );
-
   return (
     <div className="min-h-screen md:flex">
       <aside className="hidden w-60 shrink-0 flex-col bg-sidebar p-4 text-sidebar-foreground md:flex">
@@ -81,10 +71,9 @@ export function AppShell() {
         <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-card px-4 py-3 md:px-8">
           <div className="min-w-0">
             <div className="truncate font-display text-lg font-bold leading-tight">{brand}</div>
-            {!owner && <div className="text-xs text-muted-foreground">{t("cashierMode")}</div>}
+            {!owner && <div className="text-xs text-muted-foreground">{t("workerAccess")}</div>}
           </div>
           <div className="flex items-center gap-2">
-            {modeSwitch}
             <LangToggle />
             <button onClick={signOut} className="rounded-full p-2 text-muted-foreground md:hidden" aria-label={t("signOut")}>
               <LogOut className="h-5 w-5" />

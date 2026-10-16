@@ -1,14 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2, Printer, MessageCircle, CalendarDays } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Pencil, Trash2, Printer, MessageCircle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n, inr } from "@/lib/i18n";
-import { txnsQuery, totals, profileQuery, dateRange, ymd, waLink, customersQuery, type Txn, type DateFilter } from "@/lib/data";
+import { txnsQuery, totals, profileQuery, dateRange, waLink, customersQuery, type Txn, type DateFilter } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
+import { DateFilterBar } from "@/components/DateFilterBar";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/_authenticated/records")({
   head: () => ({ meta: [{ title: "Sales & Expenses — PK SmartBook" }, { name: "description", content: "View and edit your sales and expenses." }] }),
@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/records")({
 function Records() {
   const { t } = useI18n();
   const qc = useQueryClient();
+  const { role } = useRouteContext({ from: "/_authenticated" });
+  const [q, setQ] = useState("");
   const all = useQuery(txnsQuery).data ?? [];
   const profile = useQuery(profileQuery).data;
   const customers = useQuery(customersQuery).data ?? [];
@@ -25,7 +27,8 @@ function Records() {
   const [df, setDf] = useState<DateFilter>({ kind: "today" });
   const [from, to] = dateRange(df);
   const inRange = all.filter((x) => x.txn_date >= from && x.txn_date <= to);
-  const list = filter === "all" ? inRange : inRange.filter((x) => x.kind === filter);
+  const byKind = filter === "all" ? inRange : inRange.filter((x) => x.kind === filter);
+  const list = q ? byKind.filter((x) => `${x.description ?? ""} ${x.category ?? ""} ${x.amount}`.toLowerCase().includes(q.toLowerCase())) : byKind;
   const { sales, expenses, balance } = totals(inRange);
 
   function shareWa(x: Txn) {
@@ -58,6 +61,12 @@ function Records() {
     w.print();
   }
 
+  async function complete(x: Txn) {
+    const { error } = await supabase.from("transactions").update({ on_credit: false }).eq("id", x.id);
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["txns"] }); qc.invalidateQueries({ queryKey: ["customers"] });
+  }
+
   async function remove(id: string) {
     if (!confirm(t("delete") + "?")) return;
     const { error } = await supabase.from("transactions").delete().eq("id", id);
@@ -72,23 +81,8 @@ function Records() {
         <h1 className="text-3xl font-bold">{t("records")}</h1>
         <div className="flex gap-2"><TxnDialog kind="sale" /><TxnDialog kind="expense" /></div>
       </div>
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-2">
-        {([["today", t("today")], ["yesterday", t("yesterday")], ["week", t("thisWeek")]] as const).map(([k, l]) => (
-          <button key={k} onClick={() => setDf({ kind: k })}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${df.kind === k ? "bg-accent text-accent-foreground" : ""}`}>{l}</button>
-        ))}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium ${df.kind === "day" ? "bg-accent text-accent-foreground" : ""}`}>
-              <CalendarDays className="h-4 w-4" /> {df.kind === "day" ? df.day : t("pickDate")}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={df.day ? new Date(df.day + "T00:00") : undefined}
-              onSelect={(d) => d && setDf({ kind: "day", day: ymd(d) })} className="pointer-events-auto p-3" />
-          </PopoverContent>
-        </Popover>
-      </div>
+      <DateFilterBar value={df} onChange={setDf} />
+      <Input placeholder="🔍" value={q} onChange={(e) => setQ(e.target.value)} className="h-12" />
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-2xl border bg-card p-3"><div className="text-xs text-muted-foreground">{t("sales")}</div><div className="font-display text-lg font-bold text-success">{inr(sales)}</div></div>
         <div className="rounded-2xl border bg-card p-3"><div className="text-xs text-muted-foreground">{t("expenses")}</div><div className="font-display text-lg font-bold text-destructive">{inr(expenses)}</div></div>
@@ -108,6 +102,7 @@ function Records() {
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{x.description || (x.kind === "sale" ? t("sales") : t("expenses"))}</div>
               <div className="text-xs text-muted-foreground">{x.txn_date}{x.quantity ? ` · ${x.quantity} ${x.unit ?? ""}` : ""}{x.category ? ` · ${x.category}` : ""}</div>
+              {x.on_credit && <span className="mt-1 inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">{t("pendingStatus")}</span>}
             </div>
             <div className={`font-semibold ${x.kind === "sale" ? "text-success" : "text-destructive"}`}>
               {x.kind === "sale" ? "+" : "−"}{inr(Number(x.amount))}
@@ -118,8 +113,11 @@ function Records() {
             {x.kind === "sale" && (
               <button aria-label={t("printReceipt")} title={t("printReceipt")} onClick={() => printReceipt(x)} className="p-2 text-muted-foreground"><Printer className="h-4 w-4" /></button>
             )}
+            {x.on_credit && (
+              <button aria-label={t("markCompleted")} title={t("markCompleted")} onClick={() => complete(x)} className="p-2 text-success"><CheckCircle2 className="h-4 w-4" /></button>
+            )}
             <TxnDialog kind={x.kind} existing={x} trigger={<button aria-label={t("edit")} className="p-2 text-muted-foreground"><Pencil className="h-4 w-4" /></button>} />
-            <button aria-label={t("delete")} onClick={() => remove(x.id)} className="p-2 text-muted-foreground"><Trash2 className="h-4 w-4" /></button>
+            {role === "owner" && <button aria-label={t("delete")} onClick={() => remove(x.id)} className="p-2 text-muted-foreground"><Trash2 className="h-4 w-4" /></button>}
           </div>
         ))}
       </div>

@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n, inr } from "@/lib/i18n";
-import { useMode } from "@/lib/mode";
 import { txnsQuery, customersQuery, productsQuery, totals, stockLevel, dateRange, pendingTotal, shopId, ymd, type DateFilter } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
 import { DateFilterBar } from "@/components/DateFilterBar";
@@ -19,7 +18,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const { t } = useI18n();
-  const mode = useMode();
   const { role } = useRouteContext({ from: "/_authenticated" });
   const all = useQuery(txnsQuery).data ?? [];
   const customers = useQuery(customersQuery).data ?? [];
@@ -45,11 +43,12 @@ function Dashboard() {
         <Stat label={t("kadan")} value={kadan} icon={HandCoins} cls="border-warning/50 bg-warning/15 text-warning" />
       </div>
 
-      {mode === "worker" ? <QuickEntry /> : (
+      <QuickEntry />
+      {(
         <>
           <div className="grid grid-cols-2 gap-3">
-            <TxnDialog kind="sale" trigger={<Button className="h-16 rounded-2xl text-lg">{t("addSale")}</Button>} />
-            <TxnDialog kind="expense" trigger={<Button variant="secondary" className="h-16 rounded-2xl text-lg">{t("addExpense")}</Button>} />
+            <TxnDialog kind="sale" trigger={<Button variant="outline" className="h-12 rounded-2xl">{t("addSale")}</Button>} />
+            <TxnDialog kind="expense" trigger={<Button variant="outline" className="h-12 rounded-2xl">{t("addExpense")}</Button>} />
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Panel title={t("pending")} icon={Clock} link="/customers">
@@ -91,16 +90,18 @@ function QuickEntry() {
   const qc = useQueryClient();
   const [kind, setKind] = useState<"sale" | "expense" | null>(null);
   const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [pending, setPending] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!kind || !Number(amount)) return;
+    if (!kind || !Number(amount) || (kind === "expense" && !reason.trim())) return;
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({ user_id: await shopId(), kind, amount: Number(amount), txn_date: ymd(new Date()) });
+    const { error } = await supabase.from("transactions").insert({ user_id: await shopId(), kind, amount: Number(amount), description: reason.trim() || null, on_credit: pending, txn_date: ymd(new Date()) });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(t("saved")); setAmount(""); setKind(null);
+    toast.success(t("saved")); setAmount(""); setReason(""); setPending(false); setKind(null);
     qc.invalidateQueries({ queryKey: ["txns"] });
   }
 
@@ -116,6 +117,14 @@ function QuickEntry() {
       <p className="text-sm text-muted-foreground">{t("quickHint")}</p>
       <Input autoFocus type="number" inputMode="decimal" min="1" step="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)}
         placeholder="₹" className="h-16 text-center text-3xl font-bold" />
+      <Input required={kind === "expense"} value={reason} onChange={(e) => setReason(e.target.value)}
+        placeholder={kind === "expense" ? t("reason") : t("description")} className="h-12 text-base" />
+      <div className="grid grid-cols-2 gap-2">
+        {([[false, t("completed")], [true, t("pendingStatus")]] as const).map(([v, l]) => (
+          <button type="button" key={l} onClick={() => setPending(v)}
+            className={`h-12 rounded-2xl border-2 font-semibold ${pending === v ? (v ? "border-warning bg-warning/15" : "border-success bg-success/10") : ""}`}>{l}</button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Button type="button" variant="outline" className="h-14 rounded-2xl text-lg" onClick={() => setKind(null)}>{t("cancel")}</Button>
         <Button type="submit" disabled={busy} className="h-14 rounded-2xl text-lg">{t("save")}</Button>

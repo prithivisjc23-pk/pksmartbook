@@ -14,7 +14,9 @@ export async function shopId() {
   const { data } = await supabase.auth.getSession();
   const uid = data.session!.user.id;
   if (shopCache?.uid !== uid) {
-    shopCache = { uid, shop: supabase.rpc("claim_shop").then(({ data: s }) => (s as string | null) ?? uid) };
+    const shop = Promise.resolve(supabase.rpc("claim_shop")).then(({ data: s }) => (s as string | null) ?? uid);
+    shopCache = { uid, shop };
+    return shop;
   }
   return shopCache.shop;
 }
