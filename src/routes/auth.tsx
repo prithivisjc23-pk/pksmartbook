@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +11,10 @@ import { useI18n } from "@/lib/i18n";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — PK SmartBook" },
-      { name: "description", content: "Sign in or create your PK SmartBook shop account." },
-      { property: "og:title", content: "Sign in — PK SmartBook" },
-      { property: "og:description", content: "Sign in or create your PK SmartBook shop account." },
+      { title: "Login — PK SmartBook" },
+      { name: "description", content: "Log in to PK SmartBook with your mobile number." },
+      { property: "og:title", content: "Login — PK SmartBook" },
+      { property: "og:description", content: "Log in to PK SmartBook with your mobile number." },
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { redirect?: string | undefined } => ({
@@ -24,8 +23,10 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-const allowed = ["/dashboard", "/records", "/customers", "/inventory", "/admin"] as const;
+const allowed = ["/dashboard", "/records", "/customers", "/inventory", "/settings", "/admin"] as const;
 type Dest = (typeof allowed)[number];
+/** 10-digit Indian mobile → +91XXXXXXXXXX */
+export const toE164 = (m: string) => "+91" + m.replace(/\D/g, "").slice(-10);
 
 function AuthPage() {
   const { t } = useI18n();
@@ -33,37 +34,56 @@ function AuthPage() {
   const { redirect: r } = Route.useSearch();
   const dest: Dest = (allowed as readonly string[]).includes(r ?? "") ? (r as Dest) : "/dashboard";
   const [mode, setMode] = useState<"in" | "up">("in");
+  const [step, setStep] = useState<"form" | "otp" | "password">("form");
   const [busy, setBusy] = useState(false);
-  const [f, setF] = useState({ email: "", password: "", full_name: "", shop_name: "" });
+  const [f, setF] = useState({ mobile: "", password: "", full_name: "", shop_name: "", join_shop: "", otp: "" });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => data.session && navigate({ to: dest }));
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => s && navigate({ to: dest }));
-    return () => data.subscription.unsubscribe();
   }, [navigate, dest]);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  const valid = f.mobile.replace(/\D/g, "").length >= 10;
+
+  async function run(fn: () => Promise<string | null>) {
     setBusy(true);
-    if (mode === "in") {
-      const { error } = await supabase.auth.signInWithPassword({ email: f.email, password: f.password });
-      if (error) toast.error(error.message);
-    } else {
-      const { data, error } = await supabase.auth.signUp({
-        email: f.email,
-        password: f.password,
-        options: { emailRedirectTo: window.location.origin + dest, data: { full_name: f.full_name, shop_name: f.shop_name } },
-      });
-      if (error) toast.error(error.message);
-      else if (!data.session) toast.success(t("checkEmail"));
-    }
+    const err = await fn();
     setBusy(false);
+    if (err) toast.error(err);
   }
 
-  async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-    if (r.error) toast.error(String(r.error.message ?? r.error));
+  const login = () => run(async () => {
+    const { error } = await supabase.auth.signInWithPassword({ phone: toE164(f.mobile), password: f.password });
+    if (error) return t("wrongLogin");
+    navigate({ to: dest }); return null;
+  });
+  const sendOtp = () => run(async () => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: toE164(f.mobile),
+      options: { data: { full_name: f.full_name, shop_name: f.shop_name, join_shop: f.join_shop.trim() } },
+    });
+    if (error) return error.message;
+    toast.success(t("otpSent")); setStep("otp"); return null;
+  });
+  const verify = () => run(async () => {
+    const { error } = await supabase.auth.verifyOtp({ phone: toE164(f.mobile), token: f.otp.trim(), type: "sms" });
+    if (error) return error.message;
+    setStep("password"); return null;
+  });
+  const setPw = () => run(async () => {
+    const { error } = await supabase.auth.updateUser({ password: f.password });
+    if (error) return error.message;
+    navigate({ to: "/dashboard" }); return null;
+  });
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (mode === "in") return login();
+    if (step === "form") return sendOtp();
+    if (step === "otp") return verify();
+    return setPw();
   }
+
+  const label = mode === "in" ? t("signIn") : step === "form" ? t("sendOtp") : step === "otp" ? t("verify") : t("save");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-hero p-4">
@@ -74,24 +94,43 @@ function AuthPage() {
           </Link>
           <LangToggle />
         </div>
-        <h1 className="mb-4 text-2xl font-bold">{mode === "in" ? t("signIn") : t("signUp")}</h1>
+        <h1 className="mb-4 text-2xl font-bold">{mode === "in" ? t("signIn") : step === "password" ? t("setPassword") : t("signUp")}</h1>
         <form onSubmit={submit} className="space-y-3">
-          {mode === "up" && (
+          {mode === "up" && step === "form" && (
             <>
-              <Field label={t("fullName")} value={f.full_name} onChange={(v) => setF({ ...f, full_name: v })} />
+              <Field label={t("fullName")} value={f.full_name} onChange={(v) => setF({ ...f, full_name: v })} required />
               <Field label={t("shopName")} value={f.shop_name} onChange={(v) => setF({ ...f, shop_name: v })} />
             </>
           )}
-          <Field label={t("email")} type="email" value={f.email} onChange={(v) => setF({ ...f, email: v })} required />
-          <Field label={t("password")} type="password" value={f.password} onChange={(v) => setF({ ...f, password: v })} required />
-          <Button type="submit" disabled={busy} className="h-11 w-full rounded-full">
-            {mode === "in" ? t("signIn") : t("signUp")}
-          </Button>
+          {step !== "password" && (
+            <div className="space-y-1">
+              <Label>{t("mobile")}</Label>
+              <div className="flex">
+                <span className="flex items-center rounded-l-md border border-r-0 bg-muted px-3 text-sm">+91</span>
+                <Input type="tel" inputMode="numeric" maxLength={10} required disabled={step === "otp"} value={f.mobile}
+                  onChange={(e) => setF({ ...f, mobile: e.target.value.replace(/\D/g, "") })} className="h-12 rounded-l-none text-lg" />
+              </div>
+            </div>
+          )}
+          {mode === "up" && step === "form" && (
+            <Field label={t("joinShop")} value={f.join_shop} onChange={(v) => setF({ ...f, join_shop: v })} />
+          )}
+          {mode === "up" && step === "otp" && (
+            <Field label={t("otp")} value={f.otp} onChange={(v) => setF({ ...f, otp: v.replace(/\D/g, "") })} required />
+          )}
+          {(mode === "in" || step === "password") && (
+            <Field label={mode === "in" ? t("password") : t("newPassword")} type="password" value={f.password} onChange={(v) => setF({ ...f, password: v })} required />
+          )}
+          <Button type="submit" disabled={busy || (step !== "password" && !valid)} className="h-12 w-full rounded-full text-base">{label}</Button>
         </form>
-        <Button variant="outline" onClick={google} className="mt-3 h-11 w-full rounded-full">{t("google")}</Button>
-        <button onClick={() => setMode(mode === "in" ? "up" : "in")} className="mt-5 w-full text-center text-sm text-primary underline-offset-4 hover:underline">
-          {mode === "in" ? t("noAccount") : t("haveAccount")}
-        </button>
+        {step === "otp" && (
+          <button onClick={() => setStep("form")} className="mt-3 w-full text-center text-sm text-muted-foreground">{t("changeNumber")}</button>
+        )}
+        {step === "form" && (
+          <button onClick={() => setMode(mode === "in" ? "up" : "in")} className="mt-5 w-full text-center text-sm text-primary underline-offset-4 hover:underline">
+            {mode === "in" ? t("noAccount") : t("haveAccount")}
+          </button>
+        )}
       </div>
       <p className="mt-6 text-sm font-semibold text-primary-foreground/90">{t("poweredBy")}</p>
     </div>
@@ -102,7 +141,7 @@ function Field({ label, value, onChange, type = "text", required }: { label: str
   return (
     <div className="space-y-1">
       <Label>{label}</Label>
-      <Input type={type} value={value} required={required} minLength={type === "password" ? 6 : undefined} onChange={(e) => onChange(e.target.value)} className="h-11" />
+      <Input type={type} value={value} required={required} minLength={type === "password" ? 6 : undefined} onChange={(e) => onChange(e.target.value)} className="h-12" />
     </div>
   );
 }

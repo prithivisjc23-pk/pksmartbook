@@ -33,8 +33,9 @@ export function AppShell() {
   const nav = [
     { to: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     { to: "/records", label: t("records"), icon: ReceiptIndianRupee },
-    ...(mode === "shop" ? [{ to: "/customers", label: t("customers"), icon: Users }] as const : []),
-    ...(mode === "shop" && owner ? [{ to: "/inventory", label: t("inventory"), icon: Package }, { to: "/team", label: t("team"), icon: Settings }] as const : []),
+    { to: "/customers", label: t("customers"), icon: Users },
+    ...(owner ? [{ to: "/inventory", label: t("inventory"), icon: Package }] as const : []),
+    { to: "/settings", label: t("settings"), icon: Settings },
     ...(isAdmin ? [{ to: "/admin", label: t("admin"), icon: ShieldCheck }] as const : []),
   ];
 
