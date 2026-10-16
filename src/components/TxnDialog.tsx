@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useI18n } from "@/lib/i18n";
-import { customersQuery, productsQuery, UNITS, SALE_CATEGORIES, EXPENSE_CATEGORIES, ymd, type Txn } from "@/lib/data";
+import { customersQuery, productsQuery, UNITS, SALE_CATEGORIES, EXPENSE_CATEGORIES, ymd, shopId, type Txn } from "@/lib/data";
 
 const sel = "h-10 w-full rounded-md border bg-background px-3 text-sm";
 
@@ -28,6 +28,7 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
     product_id: existing?.product_id ?? "",
     quantity: existing?.quantity ? String(existing.quantity) : "",
     unit: existing?.unit ?? "Pcs",
+    on_credit: existing?.on_credit ?? false,
   });
 
   function pickProduct(id: string) {
@@ -43,14 +44,14 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
       const row = { kind, amount: Number(f.amount), description: f.description || null, category: f.category || null,
         customer_id: f.customer_id || null, txn_date: f.txn_date,
         product_id: kind === "sale" && f.product_id ? f.product_id : null,
-        quantity: parseInt(f.quantity) || 0, unit: f.quantity ? f.unit : null };
+        quantity: parseInt(f.quantity) || 0, unit: f.quantity ? f.unit : null, on_credit: f.on_credit };
       const { error } = existing
         ? await supabase.from("transactions").update(row).eq("id", existing.id)
-        : await supabase.from("transactions").insert(row);
+        : await supabase.from("transactions").insert({ ...row, user_id: await shopId() });
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["txns"] }); qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["txns"] }); qc.invalidateQueries({ queryKey: ["products"] }); qc.invalidateQueries({ queryKey: ["customers"] });
       toast.success(t("saved")); setOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -86,8 +87,8 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
           </div>
           <div className="space-y-1"><Label>{t("amount")}</Label>
             <Input type="number" inputMode="decimal" min="0" step="0.01" required value={f.amount} onChange={(e) => setF({ ...f, amount: e.target.value })} className="h-12 text-lg" /></div>
-          <div className="space-y-1"><Label>{t("description")}</Label>
-            <Input value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
+          <div className="space-y-1"><Label>{kind === "expense" ? t("reason") : t("description")}</Label>
+            <Input required={kind === "expense"} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1"><Label>{t("category")}</Label>
               <select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} className={sel}>
@@ -104,6 +105,12 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
                 {customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select></div>
           )}
+          <div className="grid grid-cols-2 gap-2">
+            {([[false, t("completed")], [true, t("pendingStatus")]] as const).map(([v, l]) => (
+              <button type="button" key={l} onClick={() => setF({ ...f, on_credit: v })}
+                className={`h-11 rounded-xl border-2 text-sm font-semibold ${f.on_credit === v ? (v ? "border-warning bg-warning/15" : "border-success bg-success/10") : ""}`}>{l}</button>
+            ))}
+          </div>
           <Button type="submit" disabled={m.isPending} className="h-11 w-full rounded-full">{t("save")}</Button>
         </form>
       </DialogContent>
