@@ -1,0 +1,1 @@
+CREATE POLICY "staff update txns" ON public.transactions FOR UPDATE TO authenticated USING (public.is_shop_staff(user_id)) WITH CHECK (public.is_shop_staff(user_id));
