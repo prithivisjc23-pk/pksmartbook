@@ -14,6 +14,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const profile = useQuery(profileQuery).data;
   const owner = role === "owner";
+  const personal = profile?.account_type === "personal";
 
   // Live sync: any change to records, customers or stock refreshes every screen.
   useEffect(() => {
@@ -33,8 +34,8 @@ export function AppShell() {
   const nav = [
     { to: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
     { to: "/records", label: t("records"), icon: ReceiptIndianRupee },
-    { to: "/customers", label: t("customers"), icon: Users },
-    ...(owner ? [{ to: "/inventory", label: t("inventory"), icon: Package }] as const : []),
+    ...(!personal ? [{ to: "/customers", label: t("customers"), icon: Users }] as const : []),
+    ...(owner && !personal ? [{ to: "/inventory", label: t("inventory"), icon: Package }] as const : []),
     { to: "/settings", label: t("settings"), icon: Settings },
     ...(isAdmin ? [{ to: "/admin", label: t("admin"), icon: ShieldCheck }] as const : []),
   ];
@@ -71,7 +72,6 @@ export function AppShell() {
         <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-card px-4 py-3 md:px-8">
           <div className="min-w-0">
             <div className="truncate font-display text-lg font-bold leading-tight">{brand}</div>
-            {!owner && <div className="text-xs text-muted-foreground">{t("workerAccess")}</div>}
           </div>
           <div className="flex items-center gap-2">
             <LangToggle />
