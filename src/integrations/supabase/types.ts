@@ -82,7 +82,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           created_at: string
+          district: string | null
           full_name: string | null
           id: string
           language: string
@@ -91,7 +93,9 @@ export type Database = {
           shop_name: string | null
         }
         Insert: {
+          account_type?: string
           created_at?: string
+          district?: string | null
           full_name?: string | null
           id: string
           language?: string
@@ -100,7 +104,9 @@ export type Database = {
           shop_name?: string | null
         }
         Update: {
+          account_type?: string
           created_at?: string
+          district?: string | null
           full_name?: string | null
           id?: string
           language?: string
