@@ -41,14 +41,6 @@ function SettingsPage() {
           <Button type="submit" className="h-12 w-full rounded-full">{t("save")}</Button>
         </form>
       )}
-      <div className="space-y-2 rounded-2xl border bg-card p-5">
-        <div className="font-display text-lg font-bold">{t("shopIdLabel")}</div>
-        {owner && <p className="text-sm text-muted-foreground">{t("shopIdHint")}</p>}
-        <div className="flex gap-2">
-          <code className="flex-1 break-all rounded-lg bg-muted p-3 text-sm">{shopId}</code>
-          <Button variant="outline" className="h-auto rounded-full" onClick={() => { navigator.clipboard.writeText(shopId); toast.success(t("copied")); }}>{t("copy")}</Button>
-        </div>
-      </div>
       <div className="flex items-center justify-between rounded-2xl border bg-card p-5">
         <span className="font-semibold">Language / மொழி</span><LangToggle />
       </div>
