@@ -40,12 +40,12 @@ export const customersQuery = {
     return data as unknown as Customer[];
   },
 };
-export type Profile = { id: string; full_name: string | null; shop_name: string | null };
+export type Profile = { id: string; full_name: string | null; shop_name: string | null; account_type: string };
 export const profileQuery = {
   queryKey: ["profile"],
   queryFn: async () => {
     const uid = await myId();
-    const { data, error } = await supabase.from("profiles").select("id, full_name, shop_name").eq("id", uid).maybeSingle();
+    const { data, error } = await supabase.from("profiles").select("id, full_name, shop_name, account_type").eq("id", uid).maybeSingle();
     if (error) throw error;
     return data as Profile | null;
   },

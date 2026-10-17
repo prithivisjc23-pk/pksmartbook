@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n, inr } from "@/lib/i18n";
-import { txnsQuery, customersQuery, productsQuery, totals, stockLevel, dateRange, pendingTotal, shopId, ymd, type DateFilter } from "@/lib/data";
+import { txnsQuery, customersQuery, productsQuery, totals, stockLevel, dateRange, pendingTotal, shopId, profileQuery, ymd, type DateFilter } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
 import { DateFilterBar } from "@/components/DateFilterBar";
 
@@ -22,6 +22,7 @@ function Dashboard() {
   const all = useQuery(txnsQuery).data ?? [];
   const customers = useQuery(customersQuery).data ?? [];
   const products = useQuery(productsQuery).data ?? [];
+  const personal = useQuery(profileQuery).data?.account_type === "personal";
   const [df, setDf] = useState<DateFilter>({ kind: "today" });
   const [from, to] = dateRange(df);
   const txns = all.filter((x) => x.txn_date >= from && x.txn_date <= to);
@@ -40,11 +41,11 @@ function Dashboard() {
         <Stat label={t("todaySales")} value={sales} icon={ArrowUpCircle} cls="border-success/40 bg-success/10 text-success" />
         <Stat label={t("todayExpenses")} value={expenses} icon={ArrowDownCircle} cls="border-destructive/40 bg-destructive/10 text-destructive" />
         <Stat label={t("netBalance")} value={balance} icon={Wallet} cls="border-primary/40 bg-primary/10 text-primary" />
-        <Stat label={t("kadan")} value={kadan} icon={HandCoins} cls="border-warning/50 bg-warning/15 text-warning" />
+        {!personal && <Stat label={t("kadan")} value={kadan} icon={HandCoins} cls="border-warning/50 bg-warning/15 text-warning" />}
       </div>
 
       <QuickEntry />
-      {(
+      {!personal && (
         <>
           <div className="grid grid-cols-2 gap-3">
             <TxnDialog kind="sale" trigger={<Button variant="outline" className="h-12 rounded-2xl">{t("addSale")}</Button>} />
