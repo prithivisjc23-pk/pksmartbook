@@ -127,6 +127,11 @@ const en = {
   poweredBy: "Powered by PK SmartBook",
   syncing: "Syncing your smart store...",
   stockItem: "Stock item (reduces stock)",
+  pendingDue: "Pending / Due",
+  dueDate: "Due date (optional)",
+  exportPdf: "Export PDF report",
+  reportTitle: "Monthly report",
+  pendingList: "Pending list",
   waBill: (shop: string, no: string, item: string, amount: string, date: string) =>
     `${shop}\nBill no: ${no}\nDate: ${date}\nItem: ${item}\nTotal: ${amount}\nThank you! — PK SmartBook`,
   waMsg: (name: string, amount: string, shop: string) =>
@@ -260,6 +265,11 @@ const ta: Dict = {
   poweredBy: "PK SmartBook மூலம் இயக்கப்படுகிறது",
   syncing: "உங்கள் கடை ஒத்திசைக்கப்படுகிறது...",
   stockItem: "சரக்கு பொருள் (சரக்கு குறையும்)",
+  pendingDue: "நிலுவை விவரங்கள்",
+  dueDate: "செலுத்த வேண்டிய தேதி (விருப்பம்)",
+  exportPdf: "PDF அறிக்கை பதிவிறக்கு",
+  reportTitle: "மாதாந்திர அறிக்கை",
+  pendingList: "நிலுவை பட்டியல்",
   waBill: (shop: string, no: string, item: string, amount: string, date: string) =>
     `${shop}\nரசீது எண்: ${no}\nதேதி: ${date}\nபொருள்: ${item}\nமொத்தம்: ${amount}\nநன்றி! — PK SmartBook`,
   waMsg: (name: string, amount: string, shop: string) =>
