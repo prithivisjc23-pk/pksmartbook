@@ -150,6 +150,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           description: string | null
+          due_date: string | null
           id: string
           kind: string
           on_credit: boolean
@@ -165,6 +166,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           description?: string | null
+          due_date?: string | null
           id?: string
           kind: string
           on_credit?: boolean
@@ -180,6 +182,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           description?: string | null
+          due_date?: string | null
           id?: string
           kind?: string
           on_credit?: boolean
