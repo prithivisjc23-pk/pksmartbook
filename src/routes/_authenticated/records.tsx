@@ -23,11 +23,12 @@ function Records() {
   const all = useQuery(txnsQuery).data ?? [];
   const profile = useQuery(profileQuery).data;
   const customers = useQuery(customersQuery).data ?? [];
-  const [filter, setFilter] = useState<"all" | "sale" | "expense">("all");
+  const [filter, setFilter] = useState<"all" | "sale" | "expense" | "pending">("all");
   const [df, setDf] = useState<DateFilter>({ kind: "today" });
   const [from, to] = dateRange(df);
   const inRange = all.filter((x) => x.txn_date >= from && x.txn_date <= to);
-  const byKind = filter === "all" ? inRange : inRange.filter((x) => x.kind === filter);
+  const byKind = filter === "pending" ? inRange.filter((x) => x.on_credit)
+    : filter === "all" ? inRange : inRange.filter((x) => x.kind === filter);
   const list = q ? byKind.filter((x) => `${x.description ?? ""} ${x.category ?? ""} ${x.amount}`.toLowerCase().includes(q.toLowerCase())) : byKind;
   const { sales, expenses, balance } = totals(inRange);
 
@@ -61,6 +62,33 @@ function Records() {
     w.print();
   }
 
+  function exportPdf() {
+    const shop = profile?.shop_name || t("appName");
+    const w = window.open("", "_blank", "width=720,height=900");
+    if (!w) { toast.error("Popup blocked"); return; }
+    const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!);
+    const pend = inRange.filter((x) => x.on_credit);
+    const row = (cells: string[]) => `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+    const txnRows = inRange.map((x) => row([x.txn_date, esc(x.description || (x.kind === "sale" ? t("sales") : t("expenses"))), esc(x.category || "—"), x.kind === "sale" ? "+" : "−", inr(Number(x.amount)), x.on_credit ? t("pendingStatus") : t("completed")])).join("");
+    const pendRows = pend.map((x) => row([x.txn_date, esc(customers.find((c) => c.id === x.customer_id)?.name || x.description || "—"), esc(x.category || "—"), x.due_date ?? "—", inr(Number(x.amount))])).join("");
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(shop)} — ${t("reportTitle")}</title>
+      <style>body{font-family:system-ui,sans-serif;max-width:680px;margin:24px auto;color:#1c1917}
+      h1{font-size:22px;margin:0} .sub{color:#78716c;font-size:13px;margin:4px 0 18px}
+      h2{font-size:15px;margin:22px 0 8px} table{width:100%;border-collapse:collapse;font-size:13px}
+      td,th{border-bottom:1px solid #e7e5e4;padding:6px 8px;text-align:left}
+      .sum{display:flex;gap:24px;font-weight:700;margin-top:8px}</style></head><body>
+      <h1>${esc(shop)}</h1><div class="sub">${t("reportTitle")}: ${from} → ${to}</div>
+      <div class="sum"><span>${t("sales")}: ${inr(sales)}</span><span>${t("expenses")}: ${inr(expenses)}</span><span>${t("balance")}: ${inr(balance)}</span></div>
+      <h2>${t("records")}</h2>
+      <table><tr><th>${t("date")}</th><th>${t("description")}</th><th>${t("category")}</th><th></th><th>${t("amount")}</th><th></th></tr>${txnRows || row([t("empty"), "", "", "", "", ""])}</table>
+      <h2>${t("pendingList")}</h2>
+      <table><tr><th>${t("date")}</th><th>${t("name")}</th><th>${t("category")}</th><th>${t("dueDate")}</th><th>${t("amount")}</th></tr>${pendRows || row([t("empty"), "", "", "", ""])}</table>
+      </body></html>`);
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
   async function complete(x: Txn) {
     const { error } = await supabase.from("transactions").update({ on_credit: false }).eq("id", x.id);
     if (error) { toast.error(error.message); return; }
@@ -79,7 +107,10 @@ function Records() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">{t("records")}</h1>
-        <div className="flex gap-2"><TxnDialog kind="sale" /><TxnDialog kind="expense" /></div>
+        <div className="flex gap-2">
+          <button onClick={exportPdf} className="rounded-full border bg-card px-4 py-2 text-sm font-medium">{t("exportPdf")}</button>
+          <TxnDialog kind="sale" /><TxnDialog kind="expense" />
+        </div>
       </div>
       <DateFilterBar value={df} onChange={setDf} />
       <Input placeholder="🔍" value={q} onChange={(e) => setQ(e.target.value)} className="h-12" />
@@ -89,7 +120,7 @@ function Records() {
         <div className="rounded-2xl bg-hero p-3 text-primary-foreground"><div className="text-xs opacity-90">{t("cashFlow")}</div><div className="font-display text-lg font-bold">{inr(balance)}</div></div>
       </div>
       <div className="flex flex-wrap gap-2">
-        {([["all", t("all")], ["sale", `${t("sales")} · ${inr(sales)}`], ["expense", `${t("expenses")} · ${inr(expenses)}`]] as const).map(([k, l]) => (
+        {([["all", t("all")], ["sale", `${t("sales")} · ${inr(sales)}`], ["expense", `${t("expenses")} · ${inr(expenses)}`], ["pending", t("pendingDue")]] as const).map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium ${filter === k ? "bg-primary text-primary-foreground" : "bg-card"}`}>{l}</button>
         ))}
@@ -101,7 +132,9 @@ function Records() {
             <div className={`h-10 w-1.5 rounded-full ${x.kind === "sale" ? "bg-success" : "bg-destructive"}`} />
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{x.description || (x.kind === "sale" ? t("sales") : t("expenses"))}</div>
-              <div className="text-xs text-muted-foreground">{x.txn_date}{x.quantity ? ` · ${x.quantity} ${x.unit ?? ""}` : ""}{x.category ? ` · ${x.category}` : ""}</div>
+              <div className="text-xs text-muted-foreground">{x.txn_date}{x.quantity ? ` · ${x.quantity} ${x.unit ?? ""}` : ""}{x.category ? ` · ${x.category}` : ""}
+                {x.customer_id && customers.find((c) => c.id === x.customer_id) ? ` · ${customers.find((c) => c.id === x.customer_id)!.name}` : ""}
+                {x.on_credit && x.due_date ? ` · ${t("dueDate").split(" (")[0]}: ${x.due_date}` : ""}</div>
               {x.on_credit && <span className="mt-1 inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">{t("pendingStatus")}</span>}
             </div>
             <div className={`font-semibold ${x.kind === "sale" ? "text-success" : "text-destructive"}`}>

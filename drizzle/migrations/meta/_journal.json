@@ -43,6 +43,13 @@
       "when": 1792212029664,
       "tag": "0005_account_type_district",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792292828564,
+      "tag": "0006_add_due_date_to_transactions",
+      "breakpoints": true
     }
   ]
 }

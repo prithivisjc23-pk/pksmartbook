@@ -29,6 +29,7 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
     quantity: existing?.quantity ? String(existing.quantity) : "",
     unit: existing?.unit ?? "Pcs",
     on_credit: existing?.on_credit ?? false,
+    due_date: existing?.due_date ?? "",
   });
 
   function pickProduct(id: string) {
@@ -44,7 +45,8 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
       const row = { kind, amount: Number(f.amount), description: f.description || null, category: f.category || null,
         customer_id: f.customer_id || null, txn_date: f.txn_date,
         product_id: kind === "sale" && f.product_id ? f.product_id : null,
-        quantity: parseInt(f.quantity) || 0, unit: f.quantity ? f.unit : null, on_credit: f.on_credit };
+        quantity: parseInt(f.quantity) || 0, unit: f.quantity ? f.unit : null, on_credit: f.on_credit,
+        due_date: f.on_credit && f.due_date ? f.due_date : null };
       const { error } = existing
         ? await supabase.from("transactions").update(row).eq("id", existing.id)
         : await supabase.from("transactions").insert({ ...row, user_id: await shopId() });
@@ -111,6 +113,10 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
                 className={`h-11 rounded-xl border-2 text-sm font-semibold ${f.on_credit === v ? (v ? "border-warning bg-warning/15" : "border-success bg-success/10") : ""}`}>{l}</button>
             ))}
           </div>
+          {f.on_credit && (
+            <div className="space-y-1"><Label>{t("dueDate")}</Label>
+              <Input type="date" value={f.due_date} onChange={(e) => setF({ ...f, due_date: e.target.value })} /></div>
+          )}
           <Button type="submit" disabled={m.isPending} className="h-11 w-full rounded-full">{t("save")}</Button>
         </form>
       </DialogContent>

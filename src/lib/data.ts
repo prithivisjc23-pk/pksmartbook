@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type Txn = {
   id: string; kind: "sale" | "expense"; amount: number; description: string | null;
   category: string | null; customer_id: string | null; txn_date: string;
-  product_id?: string | null; quantity?: number; unit?: string | null; on_credit?: boolean;
+  product_id?: string | null; quantity?: number; unit?: string | null; on_credit?: boolean; due_date?: string | null;
 };
 export type Customer = { id: string; name: string; phone: string | null; pending_amount: number; notes: string | null };
 export type Product = { id: string; name: string; quantity: number; low_stock_threshold: number; price: number; unit?: string; category?: string | null };
