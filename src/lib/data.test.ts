@@ -1,9 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { pendingTotal, totals, isLow, stockLevel, dateRange, waLink, type Txn } from "./data";
+import { pendingTotal, totals, isLow, stockLevel, dateRange, waLink, entryFormMode, type Txn } from "./data";
 
 const tx = (kind: "sale" | "expense", amount: number) => ({ id: "x", kind, amount, description: null, category: null, customer_id: null, txn_date: "2026-01-01" }) as Txn;
 
 describe("business rules", () => {
+  it("Shopkeeper entries use the detailed form", () => {
+    expect(entryFormMode("shop")).toBe("detailed");
+  });
+  it("Personal User entries use the simple form", () => {
+    expect(entryFormMode("personal")).toBe("simple");
+  });
   it("balance is sales minus expenses", () => {
     expect(totals([tx("sale", 500), tx("sale", 250), tx("expense", 300)])).toEqual({ sales: 750, expenses: 300, balance: 450 });
   });

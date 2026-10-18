@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n, inr } from "@/lib/i18n";
-import { txnsQuery, customersQuery, productsQuery, totals, stockLevel, dateRange, pendingTotal, shopId, profileQuery, ymd, type DateFilter } from "@/lib/data";
+import { txnsQuery, customersQuery, productsQuery, totals, stockLevel, dateRange, pendingTotal, shopId, profileQuery, entryFormMode, ymd, type DateFilter } from "@/lib/data";
 import { TxnDialog } from "@/components/TxnDialog";
 import { DateFilterBar } from "@/components/DateFilterBar";
 
@@ -22,7 +22,8 @@ function Dashboard() {
   const all = useQuery(txnsQuery).data ?? [];
   const customers = useQuery(customersQuery).data ?? [];
   const products = useQuery(productsQuery).data ?? [];
-  const personal = useQuery(profileQuery).data?.account_type === "personal";
+  const profile = useQuery(profileQuery);
+  const personal = entryFormMode(profile.data?.account_type) === "simple";
   const [df, setDf] = useState<DateFilter>({ kind: "today" });
   const [from, to] = dateRange(df);
   const txns = all.filter((x) => x.txn_date >= from && x.txn_date <= to);
@@ -44,13 +45,14 @@ function Dashboard() {
         {!personal && <Stat label={t("kadan")} value={kadan} icon={HandCoins} cls="border-warning/50 bg-warning/15 text-warning" />}
       </div>
 
-      <QuickEntry />
+      {profile.isSuccess && (personal ? <QuickEntry /> : (
+        <div className="grid grid-cols-2 gap-3">
+          <TxnDialog kind="sale" trigger={<Button className="h-36 whitespace-normal rounded-2xl bg-success px-3 font-display text-2xl font-bold text-success-foreground hover:bg-success/90">{t("primarySales")}</Button>} />
+          <TxnDialog kind="expense" trigger={<Button variant="destructive" className="h-36 whitespace-normal rounded-2xl px-3 font-display text-2xl font-bold">{t("selavu")}</Button>} />
+        </div>
+      ))}
       {!personal && (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <TxnDialog kind="sale" trigger={<Button variant="outline" className="h-12 rounded-2xl">{t("addSale")}</Button>} />
-            <TxnDialog kind="expense" trigger={<Button variant="outline" className="h-12 rounded-2xl">{t("addExpense")}</Button>} />
-          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Panel title={t("pending")} icon={Clock} link="/customers">
               {pending.length === 0 ? <Empty text={t("allGood")} /> : pending.slice(0, 5).map((c) => (
@@ -92,6 +94,7 @@ function QuickEntry() {
   const [kind, setKind] = useState<"sale" | "expense" | null>(null);
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [date, setDate] = useState(ymd(new Date()));
   const [pending, setPending] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -99,31 +102,31 @@ function QuickEntry() {
     e.preventDefault();
     if (!kind || !Number(amount) || (kind === "expense" && !reason.trim())) return;
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({ user_id: await shopId(), kind, amount: Number(amount), description: reason.trim() || null, on_credit: pending, txn_date: ymd(new Date()) });
+    const { error } = await supabase.from("transactions").insert({ user_id: await shopId(), kind, amount: Number(amount), description: reason.trim() || null, on_credit: pending, txn_date: date });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(t("saved")); setAmount(""); setReason(""); setPending(false); setKind(null);
+    toast.success(t("saved")); setAmount(""); setReason(""); setDate(ymd(new Date())); setPending(false); setKind(null);
     qc.invalidateQueries({ queryKey: ["txns"] });
   }
 
   if (!kind) return (
     <div className="grid grid-cols-2 gap-3">
-      <button onClick={() => setKind("sale")} className="h-36 rounded-3xl bg-success font-display text-3xl font-bold text-success-foreground shadow-soft">{t("varavu")}</button>
-      <button onClick={() => setKind("expense")} className="h-36 rounded-3xl bg-destructive font-display text-3xl font-bold text-destructive-foreground shadow-soft">{t("selavu")}</button>
+      <Button onClick={() => setKind("sale")} className="h-36 whitespace-normal rounded-2xl bg-success px-3 font-display text-2xl font-bold text-success-foreground hover:bg-success/90">{t("varavu")}</Button>
+      <Button variant="destructive" onClick={() => setKind("expense")} className="h-36 whitespace-normal rounded-2xl px-3 font-display text-2xl font-bold">{t("selavu")}</Button>
     </div>
   );
   return (
     <form onSubmit={save} className={`space-y-3 rounded-3xl border-2 p-5 ${kind === "sale" ? "border-success" : "border-destructive"}`}>
       <div className={`font-display text-2xl font-bold ${kind === "sale" ? "text-success" : "text-destructive"}`}>{kind === "sale" ? t("varavu") : t("selavu")}</div>
-      <p className="text-sm text-muted-foreground">{t("quickHint")}</p>
       <Input autoFocus type="number" inputMode="decimal" min="1" step="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)}
-        placeholder="₹" className="h-16 text-center text-3xl font-bold" />
+        aria-label={t("amount")} placeholder="₹" className="h-16 text-center text-3xl font-bold" />
       <Input required={kind === "expense"} value={reason} onChange={(e) => setReason(e.target.value)}
-        placeholder={kind === "expense" ? t("reason") : t("description")} className="h-12 text-base" />
+        aria-label={t("description")} placeholder={t("description")} className="h-12 text-base" />
+      <Input aria-label={t("date")} type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="h-12" />
       <div className="grid grid-cols-2 gap-2">
         {([[false, t("completed")], [true, t("pendingStatus")]] as const).map(([v, l]) => (
-          <button type="button" key={l} onClick={() => setPending(v)}
-            className={`h-12 rounded-2xl border-2 font-semibold ${pending === v ? (v ? "border-warning bg-warning/15" : "border-success bg-success/10") : ""}`}>{l}</button>
+          <Button variant="outline" type="button" key={l} onClick={() => setPending(v)} aria-pressed={pending === v}
+            className={`h-12 whitespace-normal rounded-lg border-2 font-semibold ${pending === v ? (v ? "border-warning bg-warning/15" : "border-success bg-success/10") : ""}`}>{l}</Button>
         ))}
       </div>
       <div className="grid grid-cols-2 gap-3">
