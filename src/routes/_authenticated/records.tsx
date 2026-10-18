@@ -23,11 +23,12 @@ function Records() {
   const all = useQuery(txnsQuery).data ?? [];
   const profile = useQuery(profileQuery).data;
   const customers = useQuery(customersQuery).data ?? [];
-  const [filter, setFilter] = useState<"all" | "sale" | "expense">("all");
+  const [filter, setFilter] = useState<"all" | "sale" | "expense" | "pending">("all");
   const [df, setDf] = useState<DateFilter>({ kind: "today" });
   const [from, to] = dateRange(df);
   const inRange = all.filter((x) => x.txn_date >= from && x.txn_date <= to);
-  const byKind = filter === "all" ? inRange : inRange.filter((x) => x.kind === filter);
+  const byKind = filter === "pending" ? inRange.filter((x) => x.on_credit)
+    : filter === "all" ? inRange : inRange.filter((x) => x.kind === filter);
   const list = q ? byKind.filter((x) => `${x.description ?? ""} ${x.category ?? ""} ${x.amount}`.toLowerCase().includes(q.toLowerCase())) : byKind;
   const { sales, expenses, balance } = totals(inRange);
 
