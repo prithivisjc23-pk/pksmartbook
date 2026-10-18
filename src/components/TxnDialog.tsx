@@ -29,6 +29,7 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
     quantity: existing?.quantity ? String(existing.quantity) : "",
     unit: existing?.unit ?? "Pcs",
     on_credit: existing?.on_credit ?? false,
+    due_date: existing?.due_date ?? "",
   });
 
   function pickProduct(id: string) {
@@ -44,7 +45,8 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
       const row = { kind, amount: Number(f.amount), description: f.description || null, category: f.category || null,
         customer_id: f.customer_id || null, txn_date: f.txn_date,
         product_id: kind === "sale" && f.product_id ? f.product_id : null,
-        quantity: parseInt(f.quantity) || 0, unit: f.quantity ? f.unit : null, on_credit: f.on_credit };
+        quantity: parseInt(f.quantity) || 0, unit: f.quantity ? f.unit : null, on_credit: f.on_credit,
+        due_date: f.on_credit && f.due_date ? f.due_date : null };
       const { error } = existing
         ? await supabase.from("transactions").update(row).eq("id", existing.id)
         : await supabase.from("transactions").insert({ ...row, user_id: await shopId() });
