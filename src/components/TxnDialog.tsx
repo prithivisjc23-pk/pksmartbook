@@ -113,6 +113,10 @@ export function TxnDialog({ kind, existing, trigger }: { kind: "sale" | "expense
                 className={`h-11 rounded-xl border-2 text-sm font-semibold ${f.on_credit === v ? (v ? "border-warning bg-warning/15" : "border-success bg-success/10") : ""}`}>{l}</button>
             ))}
           </div>
+          {f.on_credit && (
+            <div className="space-y-1"><Label>{t("dueDate")}</Label>
+              <Input type="date" value={f.due_date} onChange={(e) => setF({ ...f, due_date: e.target.value })} /></div>
+          )}
           <Button type="submit" disabled={m.isPending} className="h-11 w-full rounded-full">{t("save")}</Button>
         </form>
       </DialogContent>
