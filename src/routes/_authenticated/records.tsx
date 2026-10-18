@@ -120,7 +120,7 @@ function Records() {
         <div className="rounded-2xl bg-hero p-3 text-primary-foreground"><div className="text-xs opacity-90">{t("cashFlow")}</div><div className="font-display text-lg font-bold">{inr(balance)}</div></div>
       </div>
       <div className="flex flex-wrap gap-2">
-        {([["all", t("all")], ["sale", `${t("sales")} · ${inr(sales)}`], ["expense", `${t("expenses")} · ${inr(expenses)}`]] as const).map(([k, l]) => (
+        {([["all", t("all")], ["sale", `${t("sales")} · ${inr(sales)}`], ["expense", `${t("expenses")} · ${inr(expenses)}`], ["pending", t("pendingDue")]] as const).map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium ${filter === k ? "bg-primary text-primary-foreground" : "bg-card"}`}>{l}</button>
         ))}
@@ -132,7 +132,9 @@ function Records() {
             <div className={`h-10 w-1.5 rounded-full ${x.kind === "sale" ? "bg-success" : "bg-destructive"}`} />
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{x.description || (x.kind === "sale" ? t("sales") : t("expenses"))}</div>
-              <div className="text-xs text-muted-foreground">{x.txn_date}{x.quantity ? ` · ${x.quantity} ${x.unit ?? ""}` : ""}{x.category ? ` · ${x.category}` : ""}</div>
+              <div className="text-xs text-muted-foreground">{x.txn_date}{x.quantity ? ` · ${x.quantity} ${x.unit ?? ""}` : ""}{x.category ? ` · ${x.category}` : ""}
+                {x.customer_id && customers.find((c) => c.id === x.customer_id) ? ` · ${customers.find((c) => c.id === x.customer_id)!.name}` : ""}
+                {x.on_credit && x.due_date ? ` · ${t("dueDate").split(" (")[0]}: ${x.due_date}` : ""}</div>
               {x.on_credit && <span className="mt-1 inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-semibold text-warning">{t("pendingStatus")}</span>}
             </div>
             <div className={`font-semibold ${x.kind === "sale" ? "text-success" : "text-destructive"}`}>
