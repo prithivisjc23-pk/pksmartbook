@@ -41,6 +41,7 @@ export const customersQuery = {
   },
 };
 export type Profile = { id: string; full_name: string | null; shop_name: string | null; account_type: string };
+export const entryFormMode = (accountType: string | undefined): "simple" | "detailed" => accountType === "personal" ? "simple" : "detailed";
 export const profileQuery = {
   queryKey: ["profile"],
   queryFn: async () => {

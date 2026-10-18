@@ -11,7 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { profileQuery } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — PK SmartBook" }, { name: "description", content: "Shop details, Shop ID and language." }] }),
+  head: () => ({ meta: [{ title: "Settings — PK SmartBook" }, { name: "description", content: "Shop details, Shop ID and language." }, { property: "og:title", content: "Settings — PK SmartBook" }, { property: "og:description", content: "Shop details, Shop ID and language." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SettingsPage,
 });
 

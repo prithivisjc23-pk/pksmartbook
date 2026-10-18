@@ -12,7 +12,7 @@ import { useI18n, inr } from "@/lib/i18n";
 import { productsQuery, stockLevel, UNITS, SALE_CATEGORIES, type Product } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/inventory")({
-  head: () => ({ meta: [{ title: "Stock — PK SmartBook" }, { name: "description", content: "Inventory and low-stock alerts." }] }),
+  head: () => ({ meta: [{ title: "Stock — PK SmartBook" }, { name: "description", content: "Inventory and low-stock alerts." }, { property: "og:title", content: "Stock — PK SmartBook" }, { property: "og:description", content: "Inventory and low-stock alerts." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Inventory,
 });
 

@@ -14,3 +14,4 @@
 - Auth is mobile + password via a synthetic email `<10 digits>@pksmartbook.app` (mobileEmail in auth.tsx); never show email in UI. Why: no SMS provider needed; auto-confirm is on.
 - Super admin role is granted in handle_new_user() by matching the synthetic email of the platform owner's mobile. Why: roles stay in user_roles, never client-side.
 - Data belongs to a shop id (owner uid) resolved by claim_shop(); account_type on profiles ('shop'|'personal') drives which screens show. Why: one data model for both modes.
+- Dashboard entry form selection uses entryFormMode and reuses TxnDialog for detailed entry. Why: shopkeeper sales keep the same fields and save logic as record editing.

@@ -9,9 +9,10 @@ import { txnsQuery, totals, profileQuery, dateRange, waLink, customersQuery, typ
 import { TxnDialog } from "@/components/TxnDialog";
 import { DateFilterBar } from "@/components/DateFilterBar";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/records")({
-  head: () => ({ meta: [{ title: "Sales & Expenses — PK SmartBook" }, { name: "description", content: "View and edit your sales and expenses." }] }),
+  head: () => ({ meta: [{ title: "Sales & Expenses — PK SmartBook" }, { name: "description", content: "View and edit your sales and expenses." }, { property: "og:title", content: "Sales & Expenses — PK SmartBook" }, { property: "og:description", content: "View and edit your sales and expenses." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Records,
 });
 
@@ -108,8 +109,7 @@ function Records() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold">{t("records")}</h1>
         <div className="flex gap-2">
-          <button onClick={exportPdf} className="rounded-full border bg-card px-4 py-2 text-sm font-medium">{t("exportPdf")}</button>
-          <TxnDialog kind="sale" /><TxnDialog kind="expense" />
+          <Button variant="outline" onClick={exportPdf}>{t("exportPdf")}</Button>
         </div>
       </div>
       <DateFilterBar value={df} onChange={setDf} />
@@ -119,10 +119,10 @@ function Records() {
         <div className="rounded-2xl border bg-card p-3"><div className="text-xs text-muted-foreground">{t("expenses")}</div><div className="font-display text-lg font-bold text-destructive">{inr(expenses)}</div></div>
         <div className="rounded-2xl bg-hero p-3 text-primary-foreground"><div className="text-xs opacity-90">{t("cashFlow")}</div><div className="font-display text-lg font-bold">{inr(balance)}</div></div>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label={t("records")} className="flex flex-wrap gap-2">
         {([["all", t("all")], ["sale", `${t("sales")} · ${inr(sales)}`], ["expense", `${t("expenses")} · ${inr(expenses)}`], ["pending", t("pendingDue")]] as const).map(([k, l]) => (
-          <button key={k} onClick={() => setFilter(k)}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium ${filter === k ? "bg-primary text-primary-foreground" : "bg-card"}`}>{l}</button>
+          <Button role="tab" aria-selected={filter === k} variant={filter === k ? "default" : "outline"} key={k} onClick={() => setFilter(k)}
+            className="h-auto min-h-9 whitespace-normal">{l}</Button>
         ))}
       </div>
       <div className="max-h-[60vh] divide-y overflow-y-auto rounded-2xl border bg-card">
