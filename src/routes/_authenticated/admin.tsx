@@ -6,7 +6,7 @@ import { ymd } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: ({ context }) => { if (!context.isAdmin) throw redirect({ to: "/dashboard" }); },
-  head: () => ({ meta: [{ title: "Super Admin — PK SmartBook" }, { name: "description", content: "Platform overview of all registered shops." }] }),
+  head: () => ({ meta: [{ title: "Super Admin — PK SmartBook" }, { name: "description", content: "Platform overview of all registered shops." }, { property: "og:title", content: "Super Admin — PK SmartBook" }, { property: "og:description", content: "Platform overview of all registered shops." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Admin,
 });
 

@@ -12,7 +12,7 @@ import { useI18n, inr } from "@/lib/i18n";
 import { customersQuery, profileQuery, waLink, type Customer } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/customers")({
-  head: () => ({ meta: [{ title: "Customers — PK SmartBook" }, { name: "description", content: "Customers and pending payments." }] }),
+  head: () => ({ meta: [{ title: "Customers — PK SmartBook" }, { name: "description", content: "Customers and pending payments." }, { property: "og:title", content: "Customers — PK SmartBook" }, { property: "og:description", content: "Customers and pending payments." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Customers,
 });
 

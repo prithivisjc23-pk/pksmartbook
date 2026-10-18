@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/records")({
-  head: () => ({ meta: [{ title: "Sales & Expenses — PK SmartBook" }, { name: "description", content: "View and edit your sales and expenses." }] }),
+  head: () => ({ meta: [{ title: "Sales & Expenses — PK SmartBook" }, { name: "description", content: "View and edit your sales and expenses." }, { property: "og:title", content: "Sales & Expenses — PK SmartBook" }, { property: "og:description", content: "View and edit your sales and expenses." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Records,
 });
 

@@ -12,7 +12,7 @@ import { TxnDialog } from "@/components/TxnDialog";
 import { DateFilterBar } from "@/components/DateFilterBar";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook" }, { name: "description", content: "Today's sales, expenses, balance and customer pending at a glance." }] }),
+  head: () => ({ meta: [{ title: "Dashboard — PK SmartBook" }, { name: "description", content: "Today's sales, expenses, balance and customer pending at a glance." }, { property: "og:title", content: "Dashboard — PK SmartBook" }, { property: "og:description", content: "Today's sales, expenses, balance and customer pending at a glance." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Dashboard,
 });
 
